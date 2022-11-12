@@ -14,10 +14,15 @@ const firebaseConfig = {
   };
 
   export default function Upload() {
-    const [selectedFile, setSelectedFile] = useState({ name: ''});
+    const [selectedFile, setSelectedFile] = useState<File | undefined>();
+    const [selectedUser, setSelectedUser] = useState<string | undefined>();
     console.log({selectedFile});
     const handleUpload = (e: React.FormEvent<HTMLElement>) => {
         e.preventDefault();
+        if(!selectedFile) {
+          alert("Please select a file first!")
+          return
+        }
         //connect to firebase project
         const app = initializeApp(firebaseConfig);
         //connect to firebase storage bucket
@@ -30,16 +35,29 @@ const firebaseConfig = {
         appspot.com/o/${filename}?alt=media`
 
         //upload file to bucket
-        //uploadBytes(imageRef, selectedFile);
-
-    }
+        uploadBytes(imageRef, selectedFile)
+        //add sync await or .then and update out bd
+        .then(fileInfo => {
+          console.log(fileInfo);
+          //todo send this form info to backend API
+          fetch(process.env.REACT_APP_ENDPOINT+'/posts')
+          .then(res => res.json())
+          .then(data => {
+        })
+        })
+      }
     return (
       <form onSubmit={handleUpload}>
       <input type="file" name="photo"
       onChange={(e: React.FormEvent<HTMLElement> | any) => setSelectedFile(e.currentTarget.files[0])}
       // value={selectedFile.name}
       />
+      <br />
+      <input type="text" name="user" id="user" placeholder="user"
+      onChange={(e: React.FormEvent<HTMLElement> | any) => setSelectedUser(e.value) }
+      />
+      <br />
       <button type="submit">Upload</button>
       </form>
     )
-  }
+    }
